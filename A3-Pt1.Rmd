@@ -204,3 +204,109 @@ print(np_cyclone)
 ```{r}
 . = ottr::check("tests/np_cyclone.R")
 ```
+### Combine into One Data Frame
+
+Now, bind the two data frames together (row-wise). Since the `Basin` column already contains the information about which basin the cyclone was in, there's no need to specify an ID. (Hint: don't overthink this one.)
+
+Name the data frame `cyclones_data_update_0`.
+
+```{r error=TRUE}
+cyclones_data_update_0 <- bind_rows(at_cyclone, np_cyclone)
+
+print(cyclones_data_update_0)
+```
+```{r}
+. = ottr::check("tests/cyclones_data_update_1.R")
+```
+### Fix Latitude and Longitude
+
+The latitude and longitude are not in a format that makes for nice plotting. They're encoded as "`28.0N`" for 28 degrees North and "28.0S" for 28 degrees South of the equator. By convention, "`28.0N`" should be `28` degrees (a positive number) and `28.8S` should be -28 degrees (a negative number). Similarly, `94W` should be -94 while 94E should be 94. Fix this.
+
+Write a function that takes in a vector of latitude *or* longitude in the format of these data, then outputs a positive version of the numeric part if there's an "N" or an "E", and a negative version of the numeric part if there's a "W" or "S".
+
+There are many ways to solve this. My solution is one line and uses `parse_number()` and a single `if_else()` statement with a regex, but there are many possible ways to do this!
+
+```{r convert_latlon, error=TRUE}
+convert_latlon <- function(latlon) {
+    if_else(str_detect(latlon,"[SW]"),true=-parse_number(latlon), false =parse_number(latlon))
+}
+
+test_data <- c("49W", "49.99W", "49E", "49.99E", "49N", "49.99S", "-0.0W")
+
+# If this returns "TRUE", then your function will work on the real data.
+all.equal(
+    convert_latlon(test_data),
+    c(-49, -49.99, 49, 49.99, 49, -49.99, 0)
+)
+
+cyclones_data_update_1 <- cyclones_data_update_0 |>
+    mutate(
+        lat = convert_latlon(latitude),
+        lon = convert_latlon(longitude)
+    )
+cyclones_data_update_1
+```
+```{r}
+. = ottr::check("tests/convert_latlon.R")
+```
+### Extract Dates
+
+We have a few more tasks. First, create a [datetime](https://fralfaro.github.io/r4ds/datetimes.html) object using the `make_datetime()` function so that R knows how to plot the times. Label the new column as "`date`".
+
+To do this, you must choose whether to use `ObservYear` or `NameYear`.
+
+```{r cyclones_data_update_2, error=TRUE}
+cyclones_data_update_2 <- cyclones_data_update_1 |>
+    mutate(date=make_datetime(ObservYear, Month, Day, Hour, Minute)
+        # YOUR CODE HERE
+    )
+
+print(cyclones_data_update_2)
+```
+```{r}
+. = ottr::check("tests/cyclones_data_update_2.R")
+```
+### Assign Storm Categories
+
+Unlike in assignment 1, the category is not part of these data. However, we learned how storms are categorized! In particular, meteorologists use the [Saffir--Simpson hurricane wind scale (SSHWS)](https://en.wikipedia.org/wiki/Saffir%E2%80%93Simpson_scale) (note that our data are measured in knots on that scale).
+
+Categorize the cyclones based on the scale above using a `case_when()` statement based on the `max_wind` column. The code is set up to create an [*ordered factor*](https://fralfaro.github.io/r4ds/factors.html) so that R knows that the levels are ordered as TD \< TS \< 1 \< 2 \< 3 \< 4 \< 5.
+
+```{r cyclones_data}
+cat_levels <- c("TD", "TS", "1", "2", "3", "4", "5")
+
+cyclones_data <- cyclones_data_update_2 |>
+    mutate(
+        category = ordered(
+            case_when(
+              max_wind<=33~"TD", 
+              max_wind<=63~"TS",
+              max_wind<=82~"1",
+              max_wind<=95~"2", 
+              max_wind<=112~"3", 
+              max_wind<=136~"4",
+              max_wind>=137~"5"
+                # YOUR CODE HERE
+            ),
+            levels = cat_levels
+        )
+    )
+
+print(cyclones_data)
+```
+```{r}
+. = ottr::check("tests/cyclones_update_2.R")
+```
+### Plots and Summary Statistics!
+
+### Clean Up
+
+Now that we have a suitable data frame, save it as a parquet file with the file name `"cyclones_data.parquet"`.
+
+```{r}
+write_parquet(cyclones_data, "cyclones_data.parquet")
+```
+
+```{r}
+. = ottr::check("tests/write_cyclones.R")
+```
