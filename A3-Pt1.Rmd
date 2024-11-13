@@ -456,3 +456,349 @@ write_parquet(ice_extent_yearly, "ice_extent_yearly.parquet")
 ```{r}
 . = ottr::check("tests/sea_ice_parquet.R")
 ```
+# Opinions on climate data from Meta (from A2)
+
+These data are the same as the data we worked with on A2. The following code will load in the awareness data; you are welcome to copy it for the happening data for the purpose of this assignment (you will not be graded on this, but it may benefit you in part 2).
+
+```{r}
+climate_opinion_address <- "https://data.humdata.org/dataset/dc9f2ca4-8b62-4747-89b1-db426ce617a0/resource/6041db5f-8190-47ff-a10b-9841325de841/download/climate_change_opinion_survey_2022_aggregated.xlsx"
+
+climate_sheet_names <- climate_opinion_address |>
+    loadWorkbook() |>
+    names()
+
+aware_sheet_name <- "climate_awareness"
+
+climate_awareness <- climate_opinion_address |>
+    read.xlsx(
+        sheet = aware_sheet_name
+    ) |>
+    pivot_longer(
+        cols = !contains(aware_sheet_name),
+        names_to = "country",
+        values_to = "score"
+    ) |>
+    mutate(
+        climate_awareness = case_when(
+            climate_awareness == "I have never heard of it" ~ "aware_no",
+            climate_awareness == "I know a little about it" ~ "aware_alittle",
+            climate_awareness == "I know a moderate amount about it" ~
+                "aware_moderate",
+            climate_awareness == "I know a lot about it" ~ "aware_alot",
+            climate_awareness == "Refused" ~ "aware_refuse",
+            climate_awareness == "(Unweighted Base)" ~ "aware_base"
+        )
+    ) |>
+    rename(answer = climate_awareness) |>
+    pivot_wider(
+        names_from = answer,
+        values_from = score
+    )
+
+write_parquet(climate_awareness, "climate_awareness.parquet")
+
+climate_awareness
+
+
+happening_sheet_name <- "climate_happening"
+
+climate_happening <- climate_opinion_address |>
+    read.xlsx(
+        sheet = happening_sheet_name
+    ) |>
+    pivot_longer(
+        cols = !contains(happening_sheet_name),
+        names_to = "country",
+        values_to = "score"
+    ) |>
+    mutate(
+        climate_happening = case_when(
+            climate_happening == "Yes" ~ "happening_yes",
+            climate_happening == "No" ~ "happening_no",
+            climate_happening == "Don't know" ~
+                "happening_dontknow",
+            climate_happening == "Refused" ~ "happening_refuse",
+            climate_happening == "(Unweighted Base)" ~ "happening_base"
+        )
+    ) |>
+    rename(answer = climate_happening) |>
+    pivot_wider(
+        names_from = answer,
+        values_from = score
+    )
+
+write_parquet(climate_happening, "climate_happening.parquet")
+
+climate_happening
+```
+
+# COVID Data from Our World In Data
+
+Perhaps theres some relationship between governments' response to the pandemic and governments' response to climate change? The following data will load in some information about COVID-19 in countries around the world.
+
+```{r}
+owid_address <- "https://covid.ourworldindata.org/data/owid-covid-data.csv"
+covid_cases <- owid_address |>
+    read_csv(
+        col_types = cols(
+            .default = col_double(),
+            date = col_date(format = ""),
+            iso_code = col_character(),
+            location = col_character(),
+            continent = col_character(),
+            tests_units = col_character()
+        ),
+        progress = FALSE,
+        show_col_types = FALSE
+    )
+
+covid_cases
+```
+
+The data are collected daily, which leads to a lot of data! This is probably more than we need to compare to the other variables.
+
+In the chunk below, aggregate the data to be total cases in 2020, by country. Your solution should only have columns `country`, `continent` and `total_cases`. (*Hint*: The `year()` function will extract the year from a date column.)
+
+```{r covid_2020, error=TRUE}
+covid_cases
+
+covid_2020 <- covid_cases|>
+  filter(year(date)==2020)|>
+  group_by(location, continent)|>
+  summarise(total_cases = max(total_cases, na.rm=TRUE))|> rename(country = location)
+
+covid_2020
+```
+
+```{r}
+. = ottr::check("tests/covid_2020.R")
+```
+
+Before we move on, we'll save `covid_2020.parquet` for use in Part 2.
+
+```{r covid_2020_parquet, error=TRUE}
+write_parquet(covid_2020, "covid_2020.parquet")
+```
+
+```{r}
+. = ottr::check("tests/covid_2020_parquet.R")
+```
+
+As a very early exploration, let's compare climate awareness to the total number of covid cases in a country *per capita* in the year 2020.
+
+In order to calculate per capita values, we need the population size. The easiest way that I can find is with the R package [`wbstats`](https://cran.r-project.org/web/packages/wbstats/vignettes/wbstats.html), which pulls updated statistics from the World Bank.
+
+```{r}
+# DO NOT PUT install.packages() IN AN RMD
+# Run install.packages("wbstats") in your console, not in this code chunk
+library(wbstats)
+pop_data <- wb_data("SP.POP.TOTL", start_date = 2020, end_date = 2020)
+
+```
+
+A quick check to see which countries are in one data set but not the other:
+
+```{r}
+pop_countries <- pop_data |> pull(country)
+aware_countries <- climate_awareness |> pull(country)
+
+print("Countries in pop_data that aren't in climate_awareness:")
+setdiff(pop_countries, aware_countries)
+print("Countries in aware_countries that aren't in pop_data:")
+setdiff(aware_countries, pop_countries)
+```
+
+Many of these countries are actually in both, but have a different name! Before we can join these two data sets together, we need the primary key (`country`) to match where possible.
+
+-   One pattern that I notice is that aware_countries has periods (`.`) instead of spaces. As a first step (to save us from manually entering 29 different country names twice), change all periods to spaces using `str_replace()`.
+    -   NOTE: The `.` is a special character in regex and needs to be [escaped](https://r4ds.hadley.nz/regexps#sec-regexp-escaping)!
+
+```{r aware_fixed_country, error=TRUE}
+aware_fixed_country <- climate_awareness |>
+    mutate(country=str_replace_all(country, "\\.", " ")
+        # Replace *all* *literal* periods with a space in the country column
+    )
+
+aware_fixed_country |> pull(country) |> unique()
+```
+
+```{r}
+. = ottr::check("tests/aware_fixed_country.R")
+```
+
+Now let's run the check again:
+
+```{r}
+pop_countries <- pop_data |> pull(country)
+aware_countries <- aware_fixed_country |> pull(country)
+
+print("Countries in pop_data that aren't in climate_awareness:")
+setdiff(pop_countries, aware_countries) |> sort()
+print("Countries in aware_countries that aren't in pop_data:")
+setdiff(aware_countries, pop_countries) |> sort()
+```
+
+That's slightly less that we need to deal with! Overall, the `pop_data` has more countries in it than `aware_fixed_country`, so we'll just do our best to change the countries in `aware_fixed_country` to match `pop_data`. Note that there a lot of [controversial politics](https://www.youtube.com/watch?v=3nB688xBYdY) involved in defining a "country" (esp. Taiwan, Hong Kong, West Bank and Gaza, etc.), and I'll avoid these as much as possible for now.
+
+Use a `case_when()` statement to change the countries in `aware_fixed_country` where possible. Specifically, fix the following:
+
+-   "Bolivia (Plurinational State of)", "Congo (Democratic Republic of the)", "Egypt", "Hong Kong", "Lao People's Democratic Republic", "Slovakia", "North MAcedonia", "South Korea" (be careful with this one!), "Turkey", "Vietnam", "Yemen".
+
+```{r aware_fixed_country_match}
+aware_fixed_country_match <- aware_fixed_country |>
+    mutate(
+      country = case_when(
+        country=="Bolivia (Plurinational State of)"~"Bolivia", 
+        country=="Congo (Democratic Republic of the)"~"Congo, Dem. Rep.", 
+        country=="Egypt"~"Egypt, Arab Rep.", 
+        country=="Hong Kong"~"Hong Kong SAR, China",
+        country=="Lao People's Democratic Republic"~"Lao PDR", 
+        country=="Slovakia"~"Slovak Republic", 
+        country=="North MAcedonia"~"North Macedonia", 
+        country=="South Korea"~ "Korea, Rep.", 
+        country=="Turkey"~"Turkiye", 
+        country=="Vietnam"~"Viet Nam", 
+        country=="Yemen"~"Yemen, Rep.", 
+        TRUE~country)
+        # Change country using a case_when statement
+        # YOUR CODE HERE
+    )
+
+aware_countries <- aware_fixed_country_match |> pull(country)
+print("Countries in aware_countries that aren't in pop_data:")
+setdiff(aware_countries, pop_countries) |> sort()
+```
+
+```{r}
+. = ottr::check("tests/aware_fixed_country_match.R")
+```
+
+The remaining coutries are either broader geopolitical areas rather than countries, or Taiwan (which is apparently recognized as a country by Meta but not World Bank). For simplicity, we will simply move on without these countries/areas.
+
+Now we can join! Use a [join](https://dplyr.tidyverse.org/reference/mutate-joins.html) that only keeps countries that are in both data sets. The final data frame should have the columns `country`, `total_population`, `aware_no`, `aware_alittle`, `aware_moderate`, `aware_alot`, and `aware_refuse`.
+
+```{r aware_pop, error=TRUE}
+aware_pop<- inner_join(pop_data,aware_fixed_country_match, by=join_by(country))|> rename(total_population=SP.POP.TOTL)|>
+  select(country, total_population, aware_no, aware_alittle, aware_moderate, aware_alot, aware_refuse)
+
+pop_data
+aware_pop
+```
+
+```{r}
+. = ottr::check("tests/aware_pop.R")
+```
+
+Finally, let's make sure the country names in `covid_2020` match those in `aware_pop`. In the end, all countries in `covid_2020` should be in `aware_pop` (but `aware_pop` will have countries that are not present in `covid_2020_match_country`, which is unavoidable).
+
+```{r}
+aware_countries <- aware_pop |> pull(country) |> unique()
+
+covid_countries <- covid_2020 |> pull(country) |> unique()
+
+setdiff(covid_countries, aware_countries)
+setdiff(aware_countries, covid_countries)
+```
+
+```{r covid_2020_match_country, error=TRUE}
+covid_2020_match_country<- covid_2020|> mutate(country=case_when(
+  country=="Congo"~"Congo, Dem. Rep.", country=="Egypt"~"Egypt, Arab Rep.", country=="Hong Kong"~"Hong Kong SAR, China", country=="Laos"~"Lao PDR", country=="Slovakia"~"Slovak Republic", country=="South Korea"~"Korea, Rep.", country=="Turkey"~"Turkiye", country=="Vietnam"~"Viet Nam", country=="Yemen"~"Yemen, Rep.", TRUE~country
+))
+
+covid_2020_match_country
+```
+
+```{r}
+. = ottr::check("tests/covid_2020_match_country.R")
+```
+
+Okay, now take a quick breather. Grab a tea, go for a walk, rock out to some music, whatever self care you want. That was a lot of finicky stuff, but now we've got a data set that we can use!
+
+Join `aware_pop` and `covid_2020_match_country`, again only keep countries that are in both. Create a new column called `covid_per_capita` based on the total cases dividedby total population.
+
+```{r aware_covid, error=TRUE}
+aware_covid<- inner_join(aware_pop,covid_2020_match_country,by=join_by(country))|> mutate(covid_per_capita=total_cases/total_population)
+
+aware_covid
+```
+
+```{r}
+. = ottr::check("tests/aware_covid.R")
+```
+
+With all that done, I'll do the last few steps to make an interesting plot. Fortunately, the `covid_data` came with the classification of countries into continents, so we can add plenty of info to this plot!
+
+```{r}
+aware_covid |>
+    pivot_longer(
+        cols = starts_with("aware_"),
+        names_prefix = "aware_",
+        names_to = "awareness",
+        values_to = "value"
+    ) |>
+    mutate(
+        awareness = ordered(awareness,
+            levels = c("refuse", "no", "alittle", "moderate", "alot")
+        )
+    ) |>
+    ggplot() +
+    aes(x = value, y = covid_per_capita, colour = continent) +
+    geom_point() +
+    geom_smooth(se = FALSE, method = "lm", formula = y ~ x) +
+    facet_wrap(~ awareness, scales = "free") +
+    labs(
+        x = "Proportion of respondents who selected the awareness statement, by country",
+        y = "Total COVID-19 cases per capita in 2020",
+        title = "COVID-19 Cases versus Awareness of Climate Change Definitions",
+        subtitle = "Facets represent responses to a question about climate change awareness.",
+        colour = "Continent"
+    )
+```
+
+Some interesting patterns:
+
+-   It looks like the "refused" group are pretty similar to the "no" group. It seems safe to say that the people who refuse to answer specific questions on a climate survey are not aware of the actual definitions being used.
+-   For the Americas, it looks like being more aware of climate change is associated with an *increase* in COVID-19 cases.
+-   For other continents, there doesn't appear to be any strong patterns.
+
+There are several explanations for these patterns, such as awareness being linked to education and/or travel volume in first-world/developed countries, or perhaps it's just a consequence of how we define a "continent" (could you list the 18 countries in North America?). Most likely some of the results are due to the differences in the way countries track and report cases of COIVD-19.
+
+# World Happiness Report Score (from 2023 report)
+
+Finally, we have data from the [World Happiness Report](https://worldhappiness.report), downloaded from [here](https://worldhappiness.report/ed/2023/#appendices-and-data) and distributed with this assignment. The "Statistical Appendix" includes the description of each column, especially what the question was.
+
+For the most part, the "life_ladder" column is the most important - this is the WHR's main question that gets at how "happy" the people of a country are. You may choose to explore other options though - perhaps people's perceptions of corruption affect their response to climate issues?
+
+To make the data more convenient for Part 2, perform the following operations. The first ones are easy, the last one is tricky!
+
+-   Use `janitor` to clean the names.
+-   Rename `country_name` to `country`.
+-   Remove any rows for which `life_ladder` is `NA`.
+-   The data contain information from multiple years, and these years are not consistent for each country. For Part 2, these data will mainly be used to compare countries (we don't need the happiness over time). Filter the data so that we only have the *most recent* observation of the relevant values. (In my solution, I use the `slice()` function as part of a very short pipeline.)
+
+```{r happiness}
+happiness <- read.xlsx("DataForTable2.1.xlsx") |>
+  janitor::clean_names()|>
+  rename(country=country_name)|>
+  filter(!is.na(life_ladder))|>
+  arrange(desc(year))|>
+  group_by(country)|>
+  slice(1)
+    # YOUR CODE HERE
+
+happiness
+```
+
+```{r}
+. = ottr::check("tests/happiness.R")
+```
+
+And, finally, save the file:
+
+```{r}
+write_parquet(happiness, "happiness.parquet")
+```
+
+```{r active="", eval=FALSE}
+# END ASSIGNMENT 
+```
