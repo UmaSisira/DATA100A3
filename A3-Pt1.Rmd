@@ -1,1 +1,31 @@
+---
+title: "Exploring Disparate Data: Part 1"
+author: "15"
+date: "Due November 12th"
+---
+
+```{r active="", eval=FALSE}
+# BEGIN ASSIGNMENT 
+```
+
+```{r}
+knitr::opts_chunk$set(error = TRUE)
+# DO NOT PUT install.packages() IN AN RMD!!!
+# While you're here, make sure you group number is filled in above.
+    # (And make sure it ends with a quotation mark).
+library(tidyverse)
+theme_set(theme_bw())
+library(arrow)
+library(openxlsx)
+```
+
+List all group members here:
+
+-   Alexa Melnechuk (169086699)
+-   Joey Kielt (169087303)
+-   Sanjana Mahabir (169080789)
+-   Uma Sisira Akella (200300920)
+-   Shalin Panjwani (169073107)
+
+This file will be submitted as an Rmd file to GradeScope. You will need to create a group on GradeScope with the correct members. *If the person who submits this does not list you, you will not get a grade on this assignment!!!* Make sure you trust the person who is submitting it!
 
