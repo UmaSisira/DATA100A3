@@ -59,7 +59,7 @@ By the end of this report, we will have shown ...
 
 # Data Description
 
-## \<\<Data Set 1\>\>
+## \<\<Data Set 1\>\> Does climate change awareness correlate with national happiness levels across continents?
 
 ```{r load_data1}
 # Put in your code to load in the data set, along with any
@@ -115,7 +115,7 @@ cyclones_data <- read_parquet("./cyclones_data.parquet")
 
 ```
 
-The data come from climate awarness, happiness and covid-19 cases. and describe \<<more specific description of the data>\>.
+The data from above consists of climate awareness, happiness and covid-19 cases for continent grouping. This data was used to determine whether higher climate awareness correlates with higher or lower happiness scores by country in context with continental grouping to identify if there are regional patterns. Through examining whether countries with higher climate change awareness report higher or lower happiness levels, it helps to develop an understanding to whether climate change implications influence mental well being. By using regional comparisons, it can revel if the psychological impact of awareness varies culturally or geographically, showcasing if it affects individuals well being differently across the continents. 
 
 In order to clean the data, we \<\<steps to clean the data, concise but precise enough that a reader could follow your steps without seeing your code\>\>.
 
