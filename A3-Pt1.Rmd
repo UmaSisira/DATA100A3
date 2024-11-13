@@ -29,3 +29,178 @@ List all group members here:
 
 This file will be submitted as an Rmd file to GradeScope. You will need to create a group on GradeScope with the correct members. *If the person who submits this does not list you, you will not get a grade on this assignment!!!* Make sure you trust the person who is submitting it!
 
+## Overview
+
+This is **Part 1** of the group assignment, in which you'll demonstrate your ability to clean the data sets.
+
+In this part, you will prepare the following data sets for analysis in Part 2. Note that you'll only need to use three of them, so you can focus on those three for cleaning and get started on Part 2.
+
+Once you've completed the relevant sections, you will have the following files in your working directory:
+
+1.  `cyclones_data.parquet` contains data for hurricane strength in both the Atlantic and North Pacific basins.
+2.  `ice_extent_yearly.parquet` contains the yearly ice extent for the Arctic and the Antarctic poles.
+3.  `climate_awareness.parquet` contains the proportion of people from each country who answered "no", "a little", ... to a question asking about their awareness of the actual definitions of climate change.
+4.  `covid_2020.parquet` contains the total reported cases of COVID-19 in the year 2020 for all countries.
+    -   It also, quite helpfully, includes the continent on which each country sits, which can be joined with other data frames (with some care).
+5.  `happiness.parquet` contains information about the happiness of countries in the world, as measured by the `life_ladder` question (among other survey responses).
+
+## NOAA data for Atlantic and Pacific Basin
+
+### Load in the Data
+
+In assignment 2, the NOAA data for the Atlantic was cleaned and tidied. That data will be useful for this assignment, so re-do the steps here. In this version, all of the steps can be done in a single pipeline. We'll also be doing the North Pacific (NP) basin.
+
+```{r}
+cyclone_data_address <- "https://www.nhc.noaa.gov/data/hurdat/"
+at_cyclone_filename <- "hurdat2-1851-2022-050423.txt"
+np_cyclone_filename <- "hurdat2-nepac-1949-2022-050423.txt"
+
+new_columns <- c("status", "latitude", "longitude", "max_wind",
+    "min_pressure", "NE_extend_34", "SE_extend_34", "SW_extend_34",
+    "NW_extend_34", "NE_extend_50", "SE_extend_50", "SW_extend_50",
+    "NW_extend_50", "NE_extend_64", "SE_extend_64", "SW_extend_64",
+    "NW_extend_64", "r_max_wind"
+)
+```
+
+```{r at_cyclone, error=TRUE}
+
+# Same steps as in A2, but you can put them all in the same pipeline!
+at_cyclone <- str_c(cyclone_data_address, at_cyclone_filename, sep = "") |>
+    read_csv(
+        col_names = c(as.character(1:4)),
+        progress = FALSE,
+        show_col_types = FALSE
+    ) |>
+    separate_wider_delim(
+        cols = `4`,
+        delim=",",
+        names = new_columns
+        # Set the delim and the names
+        # YOUR CODE HERE
+    ) |>
+    mutate(
+        across(everything(), str_trim),
+        # make "-999" NAs, make "-99" NAs
+        # Create columns BasinNumberYear, Name, and Entries
+        across(everything(), ~na_if(., "-999")),
+        across(everything(), ~na_if(., "-99")),
+        BasinNumberYear = ifelse(is.na(status), `1`, NA),
+        Name = ifelse(is.na(status), `2`, NA),
+        Entries = ifelse(is.na(status), `3`, NA)
+    ) |>
+    relocate(BasinNumberYear, Name, Entries) |>
+    fill(BasinNumberYear, Name, Entries) |>
+    filter(!is.na(status))  |>
+    select(-Entries) |>
+    separate_wider_position(
+        BasinNumberYear,
+         widths=c(
+      "Basin"= 2,
+      "Number"= 2,
+      "NameYear"= 4)
+        # Specify the widths
+        # YOUR CODE HERE
+    ) |>
+    separate_wider_position(
+        `1`,
+         widths=c(
+      "ObservYear"= 4,
+      "Month"= 2,
+      "Day"= 2)
+        # Specify the widths
+        # YOUR CODE HERE
+    ) |>
+    separate_wider_position(
+        `2`,
+        widths = c(
+          "Hour"=2, 
+          "Minute"=2)
+        # Specify the widths
+        # YOUR CODE HERE
+    ) |>
+    rename(
+        Identifier = `3`
+    ) |>
+    mutate(
+        across(
+            c(NameYear, ObservYear, Month, Day, Hour,
+                Minute, Number),
+            as.integer
+        )
+    ) |>
+    mutate(across(max_wind:r_max_wind, as.numeric))
+
+
+print(at_cyclone)
+```
+
+```{r}
+. = ottr::check("tests/at_cyclone.R")
+```
+
+```{r}
+np_cyclone <- str_c(cyclone_data_address, np_cyclone_filename, sep = "") |>
+    read_csv(
+        col_names = c(as.character(1:4)),
+        progress = FALSE,
+        show_col_types = FALSE
+    ) |>
+    separate_wider_delim(
+        cols = `4`,
+        delim=",",
+        names = new_columns
+    ) |>
+    mutate(
+        across(everything(), str_trim),
+        across(everything(), ~na_if(., "-999")),
+        across(everything(), ~na_if(., "-99")),
+        BasinNumberYear = ifelse(is.na(status), `1`, NA),
+        Name = ifelse(is.na(status), `2`, NA),
+        Entries = ifelse(is.na(status), `3`, NA)
+    ) |>
+    relocate(BasinNumberYear, Name, Entries) |>
+    fill(BasinNumberYear, Name, Entries) |>
+    filter(!is.na(status))  |>
+    select(-Entries) |>
+    separate_wider_position(
+        BasinNumberYear,
+         widths=c(
+      "Basin"= 2,
+      "Number"= 2,
+      "NameYear"= 4)
+    ) |>
+    separate_wider_position(
+        `1`,
+         widths=c(
+      "ObservYear"= 4,
+      "Month"= 2,
+      "Day"= 2)
+    ) |>
+    separate_wider_position(
+        `2`,
+        widths = c(
+          "Hour"=2, 
+          "Minute"=2)
+    ) |>
+    rename(
+        Identifier = `3`
+    ) |>
+    mutate(
+        across(
+            c(NameYear, ObservYear, Month, Day, Hour,
+                Minute, Number),
+            as.integer
+        )
+    ) |>
+    mutate(across(max_wind:r_max_wind, as.numeric))
+
+    # ALL of the steps all over again
+    # YOUR CODE HERE
+
+print(np_cyclone)
+```
+
+```{r}
+. = ottr::check("tests/np_cyclone.R")
+```
