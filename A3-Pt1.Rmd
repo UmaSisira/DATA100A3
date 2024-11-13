@@ -310,3 +310,149 @@ write_parquet(cyclones_data, "cyclones_data.parquet")
 ```{r}
 . = ottr::check("tests/write_cyclones.R")
 ```
+## Sea Ice Data
+
+The following data are used in the Course Notes to demonstrate reading in specific sheets. In this assignment, we care most about what's *in* the data! I've copied the code over from the notes; there are no questions on loading the data.
+
+The sea ice extent is [defined](https://arctic.noaa.gov/report-card/report-card-2023/sea-ice-2023/) as the total area of the ocean that is covered in ice of at least 15% concentration.
+
+```{r}
+sea_ice_extent_xlsx <- "https://masie_web.apps.nsidc.org/pub//DATASETS/NOAA/G02135/seaice_analysis/Sea_Ice_Index_Daily_Extent_G02135_v3.0.xlsx"
+```
+
+```{r}
+NH_daily <- sea_ice_extent_xlsx |>
+    read.xlsx(
+        sheet = "NH-Daily-Extent",
+    ) |>
+    select(X1, X2, `1978`:`2023`) |>
+    rename(
+        month = X1,
+        day = X2
+    ) |>
+    fill(month) |>
+    pivot_longer(
+        cols = `1978`:`2023`,
+        names_to = "year",
+        values_to = "ice_extent",
+        values_drop_na = TRUE,
+    ) |>
+    mutate(
+        year = as.integer(year),
+        month = ordered(
+            month,
+            levels = c("January", "February", "March", "April",
+                "May", "June", "July", "August", "September",
+                "October", "November", "December")),
+        region = "Arctic",
+    ) |>
+    arrange(
+        year, month, day
+    )
+```
+
+```{r}
+SH_daily <- sea_ice_extent_xlsx |>
+    read.xlsx(
+        sheet = "SH-Daily-Extent",
+        skipEmptyCols = TRUE,
+        fillMergedCells = TRUE,
+        cols = 1:48
+    ) |>
+    rename(
+        month = X1,
+        day = X2
+    ) |>
+    pivot_longer(
+        cols = `1978`:`2023`,
+        names_to = "year",
+        names_transform = list(year = as.integer),
+        values_to = "ice_extent",
+        values_drop_na = TRUE,
+    ) |>
+    mutate(
+        month = ordered(
+            month,
+            levels = c("January", "February", "March", "April",
+                "May", "June", "July", "August", "September",
+                "October", "November", "December")
+        ),
+        region = "Antarctic",
+    ) |>
+    arrange(
+        year, month, day
+    )
+```
+
+```{r}
+ice_extent_daily <- bind_rows(NH_daily, SH_daily) |>
+    mutate(date = make_date(year, month, day)) |>
+    arrange(region, date)
+
+ice_extent_daily
+```
+
+## Stats and Plots
+
+```{r}
+ice_extent_daily |>
+    ggplot() +
+        aes(x = yday(date), y = ice_extent, colour = year, group = factor(year)) +
+        geom_line() +
+        facet_wrap(~region) +
+        #coord_polar() +
+        scale_colour_distiller(
+            direction = 1, type = "seq", palette = 3
+        )
+```
+In the chunk below, find the maximum and minimum sea ice extent for each year (by region). Pivot the data frame so that there's a column labelled "name" and a column labelled "value", as below.
+
+| year | region    | name | value  |
+|------|-----------|------|--------|
+| 1978 | Antarctic | min  | 7.283  |
+| 1978 | Antarctic | max  | 17.803 |
+| 1978 | Arctic    | min  | 10.231 |
+| 1978 | Arctic    | max  | 14.585 |
+| 1979 | Antarctic | min  | 2.911  |
+| 1979 | Antarctic | max  | 18.361 |
+| ...  | ...       | ...  | ...    |
+
+```{r}
+ice_extent_yearly <- ice_extent_daily |>
+  group_by(year, region)|>
+  summarise( max = max(ice_extent, na.rm=TRUE), min = min(ice_extent, na.rm=TRUE))|>
+  pivot_longer(cols=c(min,max),
+    names_to = "name", 
+    values_to = "value")|> as_tibble()
+
+ice_extent_yearly
+```
+
+```{r}
+. = ottr::check("tests/ice_extent_yearly.R")
+```
+
+Given your answer, the following code should produce a plot thats easier to interpret than the one before.
+
+```{r plot_sea_ice_extent}
+ggplot(ice_extent_yearly) +
+    aes(x = year, y = value, colour = name) +
+    geom_line() +
+    facet_wrap(~ region) +
+    labs(
+        x = "Year", y = "Sea Ice Extent",
+        colour = "Stat",
+        title = "Min and Max Sea Ice Extent, by Year",
+        subtitle = "Arctic is clearly decreasing, Antarctic is possibly becoming more variable."
+    )
+```
+
+Finally, let's save the data to `ice_extent_yeary.parquet`.
+
+```{r sea_ice_parquet, error=TRUE}
+write_parquet(ice_extent_yearly, "ice_extent_yearly.parquet")
+```
+
+```{r}
+. = ottr::check("tests/sea_ice_parquet.R")
+```
