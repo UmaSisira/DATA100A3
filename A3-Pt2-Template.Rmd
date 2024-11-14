@@ -361,13 +361,12 @@ These findings support our investigation into how global challenges affect natio
 
 # Conclusion and Future Work
 
-Overall, we found \<<general ideas>\>.
+The report illustrated the connection between global challenges like climate change awareness, natural disasters and COVID-19 to our national well-being perspective. Based on the analysis of our data, it can be concluded that there is an existing relationship between climate awareness and happiness throughout the region, which suggests that cultural and economic factors can heavily influence the data. Additionally, the data proves that the intensity of hurricanes connects to the sea ice conditions, encouraging that they are interconnected. Lastly, the data describes a unique pattern between climate awareness and the region's adversity to global challenges like the COVID-19 pandemic. Through this, it demonstrates the interdependencies of these systems to one another.
 
-A second paragraph about our findings.
+There were a few limitations that were found in our study. The first is that there is the possibility of oversimplification of complex issues. Even though this report may identify some barriers it does not focus on solutions or strategies to overcome these barriers. This could mean that the findings of this study are of no practical use to professionals. Secondly,  the timing of the study gives a limited perception of the problem. It is not specified when a lot of the data was collected and this could mean that some of the data is not relevant anymore. Lastly, there may have also been social perception bias when people reported how aware they were of climate change. They may have wanted to seem more knowledgeable about the issue and may have said that they were very aware when they were not. This means that the climate awareness data would not be completely accurate. There may be other limitations but we found these three to be the main ones. 
 
-The next steps in this analysis are...
+Our study can also be taken forward by analyzing the global annual temperatures or CO2 emissions in contrast to ice extent or hurricane strength to understand if there is a bigger narrative that is going on below the surface. To continue to dig deeper into our findings, we could see if there is an overarching census that shows economic factors correlating to a region's climate awareness, happiness and COVID-19 impact. Additionally, using GDP per capita to describe the relationship between the two. On a more health basis, data can be used to emphasize the connection of the health infrastructure or health access as they relate to happiness, shown in more detail when correlated to the pandemic. 
 
-The limitations of this analysis are as follows. (Do not simply list potential issues with sampling, but relate them to your analysis and how they affect your conclusions. An honest and complete acknowledgement of the limitations makes the analysis more trustworthy.)
 
 # References
 
