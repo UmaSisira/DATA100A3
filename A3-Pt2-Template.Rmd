@@ -119,7 +119,7 @@ The data from above consists of climate awareness, happiness and covid-19 cases 
 
 In order to clean the data, we \<\<steps to clean the data, concise but precise enough that a reader could follow your steps without seeing your code\>\>.
 
-## \<\<Data Set 2\>\>
+## \<\<Data Set 2\>\> Is there a link between sea ice extent changes and hurricane strength?
 
 ```{r load_data2}
 sea_ice_extent <- read_parquet("./ice_extent_yearly.parquet")
@@ -127,7 +127,7 @@ sea_ice_extent <- read_parquet("./ice_extent_yearly.parquet")
 # completely necessary
 ```
 
-The data come from \<<place>\> and detail \<<more specific description of the data>\>.
+The data consists of cyclones for hurricane strength and ice extent in terms of Arctic and Antarctic. This data was used to determine if years with intense hurricanes corresponded to years with lower ice extent – looking at the environmental interdependencies. By analyzing extreme whether events like hurricanes and changing ice extents which are indicators of climate change through looking at the direct impacts to the environment and the indirect affect to national well being by increasing economic and social vulnerabilities. By examining if severe hurricanes correlate with reduced sea ice, it hints at broader environmental implications of climate change – an ecosystem under strain. This ecological strain can translate into social challenges like affecting public health, safety and well being overtime, primarily hurting communities where these disasters are likely to happen. 
 
 In order to clean the data, we \<\<steps to clean the data, concise but precise enough that a reader could follow your steps without seeing your code\>\>
 
