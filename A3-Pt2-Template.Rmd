@@ -120,7 +120,7 @@ The data consists of cyclones for hurricane strength and ice extent in terms of 
 
 In order to clean the data, we \<\<steps to clean the data, concise but precise enough that a reader could follow your steps without seeing your code\>\>
 
-## \<\<Data Set 3\>\>
+## \<\<Data Set 3\>\> Did higher COVID-19 cases in 2020 impact national happiness levels, with variations by climate awareness?
 
 ```{r load_data2}
 # Put in your code to load in the data set, along with any
