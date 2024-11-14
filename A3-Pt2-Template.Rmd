@@ -1,6 +1,6 @@
 ---
-title: "TITLE OF YOUR PROJECT"
-author: "GROUP 15"
+title: "Climate, Crises, and Contenment: A Global Well-Being Analysis"
+author: "Group 15"
 date: "November 12th, 2024"
 output: pdf_document
 ---
@@ -26,112 +26,76 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, fig.width = 6)
 # DO NOT PUT "install.packages()" IN AN RMD FILE!!!
 library(tidyverse)
 library(arrow)
-theme_set(theme_bw())
 library(openxlsx)
 library(ggridges)
 library(ggplot2)
 library(viridis)
+library(dplyr)
+library(lubridate)
+theme_set(theme_bw())
 ```
 
 # Abstract
 
-This report focuses on how global challenges such as climate change awareness, natural disasters and the covid 19 pandemic impact national well being and analyzing the correlation of these effects to determine if they vary across different regions and levels of awareness. The data used was cleaned and then further manipulated to further emphasis that correlation between the different sets of data. From our data, it can be concluded that there are definitely relationships and correlations between the different sets of data. 
+This report focuses on how global challenges such as climate change awareness, natural disasters and the COVID-19 pandemic’s impact on national well-being. We explore how these factors correlate and potentially influence each other by analyzing data on happiness scores, climate awareness, COVID-19 cases, sea ice extent, and cyclone strength. The research aims to uncover patterns in how environmental consciousness, extreme weather events, and global health crises affect psychological resilience and overall happiness in various cultural and geographical contexts. The data used was cleaned and then further manipulated to emphasize the correlation between the different data sets. We started off by finding out if climate awareness correlated with happiness across countries. Then we explored whether there was a link between cyclone strength and sea ice extent. Finally, we explored whether higher COVID-19 cases in 2020 impact national happiness levels, with variations by climate awareness. Through this analysis, we came to the conclusion that global challenges such as climate change, natural disasters, and pandemics do indeed affect national well-being, albeit with different effects across regions.
+
 # Introduction
 
-Climate change is something that has been studied. Here's some relevant information about the context of our study.
+Introduction: 
 
-If needed, this paragraph is more information about the context.
+In this report, we will mainly be exploring the relationship between climate change, how aware people are of it, and well-being. Our key research questions are:
 
-In this report, we are going to explore some aspects climate change and the impact and/or perceptions of it by using exploratory techniques. We'll explore \<<general description of data>\> using \<<general description of techniques>\>.
+1.  How does climate change awareness correlate with happiness in different parts of the world?
 
-By the end of this report, we will have shown ...
+2.  Is there a connection between Arctic sea ice loss, hurricane intensification, and climate awareness?
+
+3.  Did countries with higher COVID-19 case rates in 2020 report lower happiness levels? Does this relationship vary based on climate awareness?
+
+The data we analyze includes happiness scores, climate awareness percentages, COVID-19 case counts, Arctic sea ice extent and cyclone intensity. We will be using exploratory data analysis techniques including scatterplots, ridgeline plots, and grouped boxplots. Using these we can identify patterns and relationships between various variables. 
+
+By the end of this report, we will have gained various insights into how climate awareness, hurricane intensity, and the other factors we explored could relate to happiness and well-being across regions. An understanding of this data can help in guiding future efforts to provide better support to communities facing or impacted by crises.
 
 # Data Description
 
-## \<\<Data Set 1\>\> Does climate change awareness correlate with national happiness levels across continents?
+## \<\<Data Set 1\>\>
 
 ```{r load_data1}
-# Put in your code to load in the data set, along with any
-# necessary cleaning beyond what was done in Part 1
-
-# Note that the code in this document will not be shown
-# when you click "knit", so the placement of this code
-# chunk is purely for your benefit: You can see what happened
-# with your data, which makes it easier to describe below!
-
-
-
 cyclones_data <- read_parquet("./cyclones_data.parquet")
-
- 
-# cyclones_plot <- ggplot(data = cyclones_data) +
-#   geom_density_ridges(aes(x = max_wind, y = ObservYear, fill = Awareness)) +
-#   scale_fill_viridis_c(name = "Climate Awareness") +
-#   facet_wrap(~"Hurricane Intensity", ncol = 1) +
-#   theme_minimal() +
-#   labs(title = "Climate Awareness vs. Hurricane Intensity by Year",
-#        x = "Hurricane Intensity",
-#        y = "Year")
-# 
-# ice_extent_plot <- ggplot(data = sea_ice_extent) +
-#   geom_density_ridges(aes(x = value, y = year, fill = Awareness)) +
-#   scale_fill_viridis_c(name = "Climate Awareness") +
-#   facet_wrap(~Region, ncol = 1, scales = "free_x") +
-#   theme_minimal() +
-#   labs(title = "Climate Awareness vs. Ice Extent by Year",
-#        x = "Ice Extent",
-#        y = "Year")
-# 
-# cyclones_plot
-# ice_extent_plot
- 
-
-# ggplot() +
-#   geom_density_ridges(data = cyclones_data, aes(x = Intensity, y = Year, fill = Awareness), size = 0.3) +
-#   scale_fill_viridis_c(name = "Climate Awareness") +
-#   facet_wrap(~"Hurricane Intensity", ncol = 1) +
-# 
-#   geom_density_ridges(data = sea_ice_extent_xlsx, aes(x = Ice_Extent, y = Year, fill = Awareness), size = 0.3) +
-#   scale_fill_viridis_c(name = "Climate Awareness") +
-#   facet_wrap(~Region, ncol = 1, scales = "free_x") +
-# 
-#   theme_minimal() +
-# 
-#   labs(title = "Climate Awareness vs. Hurricane Intensity and Ice Extent by Year",
-#        x = "Value (Intensity for Hurricanes, Extent for Ice)",
-#        y = "Year") +
-#   theme(legend.position = "right")
+cyclones_summary <- cyclones_data |>
+  mutate(year = year(date)) |>
+  group_by(year, Basin) |>
+  summarize(avg_max_wind = mean(max_wind, na.rm = TRUE))
 
 ```
 
-The data from above consists of climate awareness, happiness and covid-19 cases for continent grouping. This data was used to determine whether higher climate awareness correlates with higher or lower happiness scores by country in context with continental grouping to identify if there are regional patterns. Through examining whether countries with higher climate change awareness report higher or lower happiness levels, it helps to develop an understanding to whether climate change implications influence mental well being. By using regional comparisons, it can revel if the psychological impact of awareness varies culturally or geographically, showcasing if it affects individuals well being differently across the continents. 
+The data come from \<<place>\> and describe \<<more specific description of the data>\>.
 
 In order to clean the data, we \<\<steps to clean the data, concise but precise enough that a reader could follow your steps without seeing your code\>\>.
 
-## \<\<Data Set 2\>\> Is there a link between sea ice extent changes and hurricane strength?
+## \<\<Data Set 2\>\>
 
 ```{r load_data2}
 sea_ice_extent <- read_parquet("./ice_extent_yearly.parquet")
-# Reminder: do NOT print your data to the screen unless it's
-# completely necessary
+ice_summary <- sea_ice_extent |>
+  filter(region %in% c("Arctic", "Antarctic")) |>
+  group_by(year, region) |>
+  summarize(avg_extent = mean(value, na.rm = TRUE))
+
 ```
 
-The data consists of cyclones for hurricane strength and ice extent in terms of Arctic and Antarctic. This data was used to determine if years with intense hurricanes corresponded to years with lower ice extent – looking at the environmental interdependencies. By analyzing extreme whether events like hurricanes and changing ice extents which are indicators of climate change through looking at the direct impacts to the environment and the indirect affect to national well being by increasing economic and social vulnerabilities. By examining if severe hurricanes correlate with reduced sea ice, it hints at broader environmental implications of climate change – an ecosystem under strain. This ecological strain can translate into social challenges like affecting public health, safety and well being overtime, primarily hurting communities where these disasters are likely to happen. 
+The data come from \<<place>\> and detail \<<more specific description of the data>\>.
 
 In order to clean the data, we \<\<steps to clean the data, concise but precise enough that a reader could follow your steps without seeing your code\>\>
 
-## \<\<Data Set 3\>\> Did higher COVID-19 cases in 2020 impact national happiness levels, with variations by climate awareness?
+## \<\<Data Set 3\>\>
 
-```{r load_data2}
-# Put in your code to load in the data set, along with any
-# necessary cleaning beyond what was done in Part 1
-
+```{r load_data3}
 climate_awareness <- read_parquet("./climate_awareness.parquet") |>
   mutate(
     aware_score = aware_alot + 0.75*aware_moderate + 0.5*aware_alittle + 0.25*aware_no
     )
 climate_happening <- read_parquet("./climate_happening.parquet")
-#mutate(aware_score = aware_alot + 0.75*aware_moderate + 0.5*aware_alittle + 0.25*aware_no)
+
 ```
 
 The data come from \<<place>\> and detail \<<more specific description of the data>\>.
@@ -140,10 +104,7 @@ In order to clean the data, we \<\<steps to clean the data, concise but precise 
 
 ## \<\<Data Set 4\>\>
 
-```{r load_data2}
-# Put in your code to load in the data set, along with any
-# necessary cleaning beyond what was done in Part 1
-
+```{r load_data4}
 covid_2020 <- read_parquet("./covid_2020.parquet")
 ```
 
@@ -153,10 +114,7 @@ In order to clean the data, we \<\<steps to clean the data, concise but precise 
 
 ## \<\<Data Set 5\>\>
 
-```{r load_data2}
-# Put in your code to load in the data set, along with any
-# necessary cleaning beyond what was done in Part 1
-
+```{r load_data5}
 happiness_data <- read_parquet("./happiness.parquet")
 ```
 
@@ -173,10 +131,10 @@ Explain how any combinations of data were performed. Explain what kind of join w
 # 1. Does climate awareness correlate with national happiness levels across continents?
 
 #Combining data
-awareness_happiness <- climate_awareness %>%
-  select(country, aware_alot) %>%
-  merge(happiness_data %>% select(country, life_ladder), by = "country") %>%
-  merge(covid_2020 %>% select(country, continent), by = "country") %>%
+awareness_happiness <- climate_awareness |>
+  select(country, aware_alot) |>
+  merge(happiness_data |> select(country, life_ladder), by = "country") |>
+  merge(covid_2020 |> select(country, continent), by = "country") |>
   filter(!is.na(continent), !is.na(aware_alot), !is.na(life_ladder))
 
 # Create scatter plot
@@ -192,49 +150,35 @@ ggplot(awareness_happiness, aes(x = aware_alot, y = life_ladder, color = contine
 # 2. Is there a link between sea ice extent changes and hurricane strength?
 
 # Combining data
-# Prepare data for hurricane strength
-yearly_cyclone_strength <- cyclones_data %>%
-  group_by(ObservYear) %>%
-  summarize(avg_max_wind = mean(max_wind, na.rm = TRUE))
+combined_data <- merge(cyclones_summary, ice_summary, by = "year")
 
-# Prepare data for sea ice extent
-yearly_ice_extent <- sea_ice_extent %>%
-  filter(region %in% c("Arctic", "Antarctic")) %>%
-  group_by(year, region) %>%
-  summarize(avg_extent = mean(value, na.rm = TRUE))
+# Create the ridgeline plot with facets
+ggplot(combined_data, aes(x = avg_max_wind, y = region, fill = after_stat(x))) +
+  geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
+  facet_wrap(~ Basin, scales = "free", ncol = 2) +
+  scale_fill_viridis_c(name = "Avg Max Wind Speed (kt)", option = "C") +
+  labs(title = "Sea Ice Extent vs Hurricane Strength (1979-2023)",
+       subtitle = "Ridgeline plot of average maximum wind speed by basin and ice region",
+       x = "Average Maximum Wind Speed (kt)",
+       y = "Sea Ice Region") +
+  theme_ridges() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
 
-# Ridgeline plot for Hurricane Strength over time
-ggplot(yearly_cyclone_strength, aes(x = avg_max_wind, y = as.factor(ObservYear), fill = ObservYear)) +
-  geom_density_ridges() +
-  labs(title = "Hurricane Strength Over Time",
-       x = "Average Maximum Wind Speed",
-       y = "Year",
-       fill = "Year") +
-  theme_minimal() +
-  scale_fill_viridis_c()
-
-# Ridgeline plot for Sea Ice Extent over time (Arctic and Antarctic)
-ggplot(yearly_ice_extent, aes(x = avg_extent, y = as.factor(year), fill = region)) +
-  geom_density_ridges() +
-  labs(title = "Sea Ice Extent Over Time (Arctic and Antarctic)",
-       x = "Average Ice Extent",
-       y = "Year",
-       fill = "Region") +
-  theme_minimal() +
-  scale_fill_manual(values = c("Arctic" = "blue", "Antarctic" = "lightblue"))
 
 # 3. Did higher COVID-19 cases in 2020 impact national happiness levels, with variations by climate awareness?
 
 # Combining data
 covid_happiness_awareness <- merge(
   merge(
-    covid_2020 %>% select(country, continent, total_cases),
-    happiness_data %>% select(country, life_ladder),
+    covid_2020 |> select(country, continent, total_cases),
+    happiness_data |> select(country, life_ladder),
     by = "country"
   ),
-  climate_awareness %>% select(country, aware_alot),
+  climate_awareness |> select(country, aware_alot),
   by = "country"
-) %>%
+) |>
   mutate(
     covid_impact = ifelse(total_cases > median(total_cases, na.rm = TRUE), "High", "Low"),
     climate_awareness = ifelse(aware_alot > median(aware_alot, na.rm = TRUE), "High", "Low")
