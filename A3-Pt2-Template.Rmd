@@ -35,8 +35,7 @@ library(viridis)
 
 # Abstract
 
-General context, very brief data descriptions, techniques used, and general conclusions, all contained within a single, concise paragraph.
-
+This report focuses on how global challenges such as climate change awareness, natural disasters and the covid 19 pandemic impact national well being and analyzing the correlation of these effects to determine if they vary across different regions and levels of awareness. The data used was cleaned and then further manipulated to further emphasis that correlation between the different sets of data. From our data, it can be concluded that there are definitely relationships and correlations between the different sets of data. 
 # Introduction
 
 Climate change is something that has been studied. Here's some relevant information about the context of our study.
