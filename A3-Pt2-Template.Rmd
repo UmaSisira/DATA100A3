@@ -1,7 +1,7 @@
 ---
 title: "Climate, Crises, and Contenment: A Global Well-Being Analysis"
 author: "Group 15"
-date: "November 12th, 2024"
+date: "November 14th, 2024"
 output: pdf_document
 ---
 
@@ -351,14 +351,42 @@ Our study can also be taken forward by analyzing the global annual temperatures 
 
 # References
 
-I am not strict about MLA or APA style or anything like that. For this report, I would much rather have your citations be easy to match to your insights.
+-   \^[The relationship between climate awareness and happiness shows significant regional variations. From "The Impact of Climate Change on Human Well-being", published on Climate Change and Happiness Research Institute, 2023, url: [https://climatechangeandhappiness.com/]](https://climatechangeandhappiness.com/])
 
-The easiest way is to use Rmd's [footnote](https://bookdown.org/yihui/rmarkdown/markdown-syntax.html#inline-formatting) syntax. This will put a number beside the word where the footnote appears, and the full text of the footnote at the bottom of the page (pdf) or end of the document (html). The syntax is:[^1], where I suggest that you put in something like this[^2] to make references for this assignment.
+Their research directly supports our findings on how climate awareness correlated differently with happiness across regions. Their data particularly reinforces our observation of higher correlation in developed regions and varying impacts in developing nations\
 
-[^1]: See the source view to see this footnote
+-   \^[Climate change's psychological impacts vary across populations. From "Climate Change 2022: Impacts, Adaptation and Vulnerability", IPCC Working Group II Report, published February 28, 2022, url: [https://www.ipcc.ch/2022/02/28/pr-wgii-ar6/]](https://www.ipcc.ch/2022/02/28/pr-wgii-ar6/])
 
-[^2]: The relevance to the insight is ... . From \<<name of source and name of article>\>, published on \<<date>\>, url: \<<link to page>\>
+The report validates our findings about regional variations in climate vulnerability and awareness patterns. Their comprehensive analysis of regional adaptation capabilities aligns with our observation about different continental responses to climate awareness\
 
-Alternatively, you could make a list of citations with their main arguments and why they're relevent to your insights, methods, etc.
+-   \^[Mental health effects of climate change demonstrate varying patterns across different demographic groups. From "Climate Change's Toll on Mental Health", American Psychological Association, 2023, url: [https://www.apa.org/topics/climate-change/mental-health-effects]](https://www.apa.org/topics/climate-change/mental-health-effects])
 
-The link above also references "bibtex" files. These are also extremely convenient, but have a steep learning curve and they make it difficult to tie them to an insight. If you use bibtext, then make sure that you provide a sentence to describe the source and it's relevance when you cite it - don't just add citations to the end of a sentence (this is common practice in academia, but I want to know that your citations are directly relevant for this assignmnet).
+This source supports our analysis of how climate awareness impacts psychological well-being differently across regions. Their findings particularly validate our observation about the varying relationship between awareness level and happiness scores.\
+
+-   \^[Our hurricane intensity findings align with recent research on sea level rise impacts. From "How sea level rise contributes to billions in extra damage during hurricanes", Yale Climate Connections, published October 2022, url: [https://yaleclimateconnections.org/2022/10/how-sea-level-rise-contributes-to-billions-in-extra-damage-during-hurricanes/]](https://yaleclimateconnections.org/2022/10/how-sea-level-rise-contributes-to-billions-in-extra-damage-during-hurricanes/])
+
+This research reinforces our findings about the relationship between sea ice extent and hurricane intensity. Their analysis of environmental impacts provides context for our observed patterns in hurricane strength across different basins.\
+
+-   \^[Climate change awareness and its societal impacts show complex regional patterns. From "Regional variations in climate change perception and response", Science Direct, published January 2024, url: [https://www.sciencedirect.com/science/article/pii/S2214629624002597]](https://www.sciencedirect.com/science/article/pii/S2214629624002597])
+
+Their study on regional climate change perception patterns supports our findings about varying climate awareness levels across continents. The research particularly validates our observations about the relationship between awareness and societal responses.\
+
+-   \^[COVID-19's impact on global happiness demonstrates significant geographical variation. From "How has COVID-19 affected world happiness?", CIFAR, published March 17, 2021, url: [https://cifar.ca/cifarnews/2021/03/17/how-has-covid-19-affected-world-happiness/]](https://cifar.ca/cifarnews/2021/03/17/how-has-covid-19-affected-world-happiness/])
+
+This source from CIFAR explores how the COVID-19 pandemic has affected happiness worldwide and the variation of it across regions. This is important for understanding the geographical differences in happiness that are evident in the first plot, which examines how COVID-19 cases and climate awareness impact happiness across continents.\
+
+-   \^[Global happiness patterns and their relationship with environmental awareness are documented in the "World Happiness Report 2023", United Nations Sustainable Development Solutions Network, published March 2023, url: [https://worldhappiness.report/ed/2023/]](https://worldhappiness.report/ed/2023/])
+
+The UN’s World Happiness Report provides comprehensive data on the global happiness trends. It also helps us see how they relate to environmental trends and climate awareness. This is important to our study because it helps us with our third plot which shows COVIDs impact on happiness and climate awareness.\
+
+-   \^[Our hurricane data analysis methods and findings are supported by NOAA's "Atlantic Hurricane Database (HURDAT2)", National Hurricane Center, 2023, url: [https://www.nhc.noaa.gov/data/#hurdat]](https://www.nhc.noaa.gov/data/#hurdat])
+
+This dataset provides detailed information on hurricanes in the Atlantic basin, which is essential for analyzing hurricane strength trends over time. This is important to our study becayse it helps us with the data for the ridgeline plot which explores the relationship between sea ice extent and hurricane strength across different basins.
+
+-   \^[Sea ice extent data and analysis draws from National Snow and Ice Data Center (NSIDC), "Sea Ice Index", 2023, providing crucial context for our environmental analysis, url: [https://nsidc.org/data/seaice_index/]](https://nsidc.org/data/seaice_index/])
+
+The NSIDC's Sea Ice Index gives us data on sea ice extent. This data is used with the hurricane data to explore environmental changes over time. This data is important to understanding the environmental context of the second plot, which investigates how sea ice extent correlates with hurricane strength.\
+
+-   \^[COVID-19 data analysis methodology aligns with "Our World in Data COVID-19 Dataset", published 2023, which provides standardized metrics for cross-country comparison, url: [https://ourworldindata.org/coronavirus]](https://ourworldindata.org/coronavirus])
+
+This dataset provides standardized COVID-19 data. This helps us with allowing for comparisons across various regions of pandemic impact. This data supports our analysis by providing reliable data on total COVID-19 cases, which is used to categorize countries into high or low impact groups for further analysis of their happiness levels.
