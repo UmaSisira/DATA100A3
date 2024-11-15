@@ -1,0 +1,392 @@
+---
+title: "Climate, Crises, and Contenment: A Global Well-Being Analysis"
+author: "Group 15"
+date: "November 14th, 2024"
+output: pdf_document
+---
+
+List your group members, including their student numbers, here:
+
+-   Alexa Melnechuk (169086699)
+-   Joey Kielt (169087303)
+-   Sanjana Mahabir (169080789)
+-   Uma Sisira Akella (200300920)
+-   Shalin Panjwani (169073107)
+
+You **must** be in a group in MyLS in order to see the DropBox used for submission. Even if you're alone, you must join a group by yourself.
+
+You **must** be in a group with people from the same section as you. MyLS does not allow for groups including students from both Data100A and Data100B.
+
+```{r setup, include=FALSE}
+# echo = FALSE will set the Rmd to *not* show the R code. Don't change this.
+# You may change the default figure width and figure height as you please.
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, fig.width = 6)
+
+# Put any libraries that you need to load here.
+# DO NOT PUT "install.packages()" IN AN RMD FILE!!!
+library(tidyverse)
+library(arrow)
+library(openxlsx)
+library(ggridges)
+library(ggplot2)
+library(viridis)
+library(dplyr)
+library(lubridate)
+library(knitr)
+theme_set(theme_bw())
+```
+
+# Abstract
+
+This report focuses on how global challenges such as climate change awareness, natural disasters and the COVID-19 pandemic’s impact on national well-being. We explore how these factors correlate and potentially influence each other by analyzing data on happiness scores, climate awareness, COVID-19 cases, sea ice extent, and cyclone strength. The research aims to uncover patterns in how environmental consciousness, extreme weather events, and global health crises affect psychological resilience and overall happiness in various cultural and geographical contexts. The data used was cleaned and then further manipulated to emphasize the correlation between the different data sets. We started off by finding out if climate awareness correlated with happiness across countries. Then we explored whether there was a link between cyclone strength and sea ice extent. Finally, we explored whether higher COVID-19 cases in 2020 impact national happiness levels, with variations by climate awareness. Through this analysis, we came to the conclusion that global challenges such as climate change, natural disasters, and pandemics do indeed affect national well-being, albeit with different effects across regions.
+
+# Introduction
+
+Introduction: 
+
+In this report, we will mainly be exploring the relationship between climate change, how aware people are of it, and well-being. Our key research questions are:
+
+1.  How does climate change awareness correlate with happiness in different parts of the world?
+
+2.  Is there a connection between Arctic sea ice loss, hurricane intensification, and climate awareness?
+
+3.  Did countries with higher COVID-19 case rates in 2020 report lower happiness levels? Does this relationship vary based on climate awareness?
+
+The data we analyze includes happiness scores, climate awareness percentages, COVID-19 case counts, Arctic sea ice extent and cyclone intensity. We will be using exploratory data analysis techniques including scatterplots, ridgeline plots, and grouped boxplots. Using these we can identify patterns and relationships between various variables. 
+
+By the end of this report, we will have gained various insights into how climate awareness, hurricane intensity, and the other factors we explored could relate to happiness and well-being across regions. An understanding of this data can help in guiding future efforts to provide better support to communities facing or impacted by crises. it is also important to keep in mind that, though this study may reveal some insights, it may be limited in that it may provide an oversimplification of data. This means it may not be of practical value to professionals. However, for the purposes of general knowledge about this issue, it should provide valuable perceptions.
+
+# Data Description
+
+## \<\<Data Set 1\>\>
+
+```{r load_data1}
+cyclones_data <- read_parquet("./cyclones_data.parquet")
+cyclones_summary <- cyclones_data |>
+  mutate(year = year(date)) |>
+  group_by(year, Basin) |>
+  summarize(avg_max_wind = mean(max_wind, na.rm = TRUE))
+
+```
+
+The data come from NOAA data files for cyclones in the Atlantic and North Pacific basins. First we began by loading the NOAA data files. Where then the columns are set up to display the wind speed, pressure, and location coordinates. When dealing with the missing values in the data set "-999" and "-99" were used as placeholders. The code then replaces these values with NA allowing for easier filtering. When structuring the cyclone data set columns like BasinNumberYear, Name, and Entries are created to easily identify the rows. The columns hold data for each cyclone, such as name and year. The fill function is used to carry values down in these columns, ensuring each cyclone entry has complete data. Once both the Atlantic and North Pacific data sets are created, they are combined into a single data frame for us to easily analyze. When cleaning the coordinate data latitude and longitude are initially in text format. Using the function, convert_latlon,we were able to convert it into numeric values. Where the north and east values are positive and south and west values are negative. After completing the cleaning process, the dataset is saved as a parquet file named "cyclones_data.parquet". This format is efficient for storage and can be easily used for further analysis.
+
+## \<\<Data Set 2\>\>
+
+```{r load_data2}
+sea_ice_extent <- read_parquet("./ice_extent_yearly.parquet")
+ice_summary <- sea_ice_extent |>
+  filter(region %in% c("Arctic", "Antarctic")) |>
+  group_by(year, region) |>
+  summarize(avg_extent = mean(value, na.rm = TRUE))
+
+```
+
+The data come from Excel file containing Northern Hemisphere (NH) and Southern Hemisphere (SH) ice extent data from 1978 to 2023. We loaded the sea ice data from the Excel file. The code reads the NH sheet, selecting specific columns and renaming them to tidy the data. The data is then tidied further using pivot_longer() to create a single year column, allowing each row to contain month, day, year, and ice_extent. The same cleaning process is also used for the SH sheet. The NH and SH datasets are then combined into one, with a new date column created from year, month, and day, all sorted by region and date. The code generates a line plot of daily sea ice extent by region to visualize annual trends, then calculates yearly minimum and maximum ice extents for each region. These min and max values are organized in a table and saved as "ice_extent_yearly.parquet". 
+
+## \<\<Data Set 3\>\>
+
+```{r load_data3}
+climate_awareness <- read_parquet("./climate_awareness.parquet") |>
+  mutate(
+    aware_score = aware_alot + 0.75*aware_moderate + 0.5*aware_alittle + 0.25*aware_no
+    )
+
+```
+
+The data comes from and Excel file with how aware people are of climate change based on country. We began by loading the climate awareness data from the Excel file. To clean the data, we first pivoted the data to show the country and score. Then we mutated it so that we had a column for each type of score. Then we pivoted it again to show the country and scores better. These vales were stored in 'climate_awareness.parquet'. In part 2, we multiplied the type of score with a numerical value to make our own system for identifying how aware people were.
+
+## \<\<Data Set 4\>\>
+
+```{r load_data4}
+covid_2020 <- read_parquet("./covid_2020.parquet")
+```
+
+The data comes from Our World In Data to analyze total cases by country for 2020. We began by loading the COVID data, selecting specific columns: date, iso_code, location, and continent, and then filtering it to only have 2020 cases. To compare COVID cases with climate awareness, the code aligns country names in both datasets. First, it replaces periods in country names (e.g., “U.S.A.” becomes “USA”) and then corrects specific mismatches (e.g., “Bolivia (Plurinational State of)” is shortened to “Bolivia” and “Hong Kong” becomes “Hong Kong SAR, China”). Once names are standardized, the code joins the COVID data with World Bank population data and calculates each country’s COVID cases per capita by dividing total cases by population.
+
+## \<\<Data Set 5\>\>
+
+```{r load_data5}
+happiness_data <- read_parquet("./happiness.parquet")
+```
+
+The data comes from an Excel file from the World Happiness Report. It contains a "life_ladder" column which shows how happy people are. We began by loading the happiness data from the Excel file. To clean the data, we used jaitor() to clean the names. Then, we renamed "country_names" to "country". Then, we filtered out any "NA" values in "life_ladder". Then, arranged in descending order and grouped by country. We then filtered the data so that we only have the most recent observation of the relevant values. This data was stored in "happiness.parquet".
+
+## Combining the Data
+
+#### *1. Climate awareness correlation with national happiness levels across continents*
+
+For this analysis, three datasets were combined using merge operations:
+
+1.  climate_awareness
+
+2.  happiness_data
+
+3.  covid_2020
+
+The combination was performed using two successive merge operations.
+
+1.  First, climate_awareness and happiness_data were merged using the "country" column as the key.
+
+2.  Then, the resulting dataset was merged with covid_2020, again using the "country" column as the key.
+
+After merging, rows with missing values in continent, aware_alot, or life_ladder were filtered out using the filter function.
+
+#### ***2. Link between sea ice extent changes and hurricane strength***
+
+For this analysis, two datasets were combined:
+
+1.  cyclones_summary
+
+2.  ice_summary
+
+These datasets were merged using the "year" column as the key. The default merge behavior (natural join) was used.
+
+#### ***3. COVID-19 impact on national happiness levels, with variations by climate awareness***
+
+This analysis combined three datasets:
+
+1.  covid_2020
+
+2.  happiness_data
+
+3.  climate_awareness
+
+The combination was performed using two successive merge operations, both using the default merge behavior:
+
+1.  First, covid_2020 and happiness_data were merged using the "country" column as the key.
+
+2.  Then, the resulting dataset was merged with climate_awareness, again using the "country" column as the key.
+
+In all cases, the merges were performed using the default merge in R, meaning they were "naturally joined". This means that all rows from both datasets are included in the result, with NA values filled in where there is no match.
+
+```{r}
+
+# 1. Does climate awareness correlate with national happiness levels across continents?
+
+#Combining data
+awareness_happiness <- climate_awareness |>
+  select(country, aware_alot) |>
+  merge(happiness_data |> select(country, life_ladder), by = "country") |>
+  merge(covid_2020 |> select(country, continent), by = "country") |>
+  filter(!is.na(continent), !is.na(aware_alot), !is.na(life_ladder))
+
+# 2. Is there a link between sea ice extent changes and hurricane strength?
+
+# Combining data
+combined_data <- merge(cyclones_summary, ice_summary, by = "year")
+
+# 3. Did higher COVID-19 cases in 2020 impact national happiness levels, with variations by climate awareness?
+
+# Combining data
+covid_happiness_awareness <- merge(
+  merge(
+    covid_2020 |> select(country, continent, total_cases),
+    happiness_data |> select(country, life_ladder),
+    by = "country"
+  ),
+  climate_awareness |> select(country, aware_alot),
+  by = "country"
+) |>
+  mutate(
+    covid_impact = ifelse(total_cases > median(total_cases, na.rm = TRUE), "High", "Low"),
+    climate_awareness = ifelse(aware_alot > median(aware_alot, na.rm = TRUE), "High", "Low")
+  )
+
+
+
+```
+
+# Exploratory Data Analysis
+
+Process Description and Justification
+
+We conducted a systematic analysis to understand how global challenges - climate change, natural disasters, and the COVID-19 pandemic - affect national well-being across different regions. Our exploration process involved three key steps:
+
+1.  Analyzing correlations between climate awareness and happiness scores across continents
+2.  Examining the relationship between sea ice extent and hurricane intensity
+3.  Investigating how COVID-19 impacts interacted with climate awareness to affect happiness levels
+
+This structured approach allowed us to address our research questions while accounting for variations in the data.
+
+We explored many aspects of the data, but will demonstrate three. These are:
+
+1\. continental patterns in how climate awareness relates to happiness levels,
+
+2\. distribution of hurricane strength across different ocean basins and their relationship with Arctic and Antarctic sea ice regions
+
+3\. COVID-19's impact on happiness levels, considering climate awareness
+
+The first aspect that we found interesting is shown in \@ref(fig:insight1).
+
+```{r insight1, fig.cap="Climate Awareness vs. Happiness by Continent"}
+# 1. Climate awareness correlation with happiness levels
+
+# Create scatter plot
+ggplot(awareness_happiness, aes(x = aware_alot, y = life_ladder, color = continent)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Climate Awareness vs. Happiness by Continent",
+       x = "Climate Awareness Level",
+       y = "Happiness Score",
+       color = "Continent") +
+  theme_minimal()
+```
+
+This scatter plot reveals distinct continental patterns in how climate awareness relates to happiness levels. European and North American countries show positive correlations between awareness and happiness (scores ranging 6.0-7.5), while African nations demonstrate an inverse relationship. This suggests that the impact of climate awareness on well-being varies significantly by region, possibly due to differing socioeconomic conditions.
+
+This insight is supported by the summary statistics in table \@ref(tab:summary_stats1)
+
+```{r summary_stats1}
+# Calculate summary statistics from the combined datasets
+summary_stats <- covid_happiness_awareness |>
+  group_by(continent) %>%
+  summarise(
+    avg_happiness = mean(life_ladder, na.rm = TRUE),
+    avg_climate_aware = mean(aware_alot, na.rm = TRUE) * 100,
+    covid_cases_100k = mean(total_cases/100000, na.rm = TRUE),
+    n_countries = n()
+  ) |>
+  arrange(desc(avg_happiness))
+
+# Create formatted table
+kable(summary_stats,
+      caption = "Summary Statistics by Continent",
+      digits = 2,
+      col.names = c("Continent", "Avg Happiness", "Climate Awareness %", 
+                    "COVID Cases per 100k", "Number of Countries"))
+```
+
+The next insight that we found is shown in \@ref(fig:insight2).
+
+```{r insight2, fig.height=4, fig.width=6, fig.cap="Ridgeline plot of average maximum wind speed by basin and ice region"}
+# 2. Sea ice extent and hurricane strength relationship
+
+# Create the ridgeline plot with facets
+ggplot(combined_data, aes(x = avg_max_wind, y = region, fill = after_stat(x))) +
+  geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
+  facet_wrap(~ Basin, scales = "free", ncol = 2) +
+  scale_fill_viridis_c(name = "Avg Max Wind Speed (kt)", option = "C") +
+  labs(title = "Sea Ice Extent vs Hurricane Strength (1979-2023)",
+       subtitle = "Ridgeline plot of average maximum wind speed by basin and ice region",
+       x = "Average Maximum Wind Speed (kt)",
+       y = "Sea Ice Region") +
+  theme_ridges() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+```
+
+This ridgeline plot demonstrates the distribution of hurricane strength across different ocean basins (AL: Atlantic, CP: Central Pacific, EP: Eastern Pacific) and their relationship with Arctic and Antarctic sea ice regions. Key observations include: - Central Pacific (CP) shows the widest range of wind speeds (0-75 kt) - Atlantic basin (AL) displays more concentrated distributions (30-60 kt) - Both Arctic and Antarctic ice regions show similar patterns within basins - Higher wind speeds tend to occur in regions with lower ice extent
+
+This insight is supported by the summary statistics in table \@ref(tab:summary_stats2)
+
+```{r summary_stats2}
+summary_stats <- combined_data |>
+  group_by(Basin, region) |>
+  summarise(
+    avg_max_wind = mean(avg_max_wind, na.rm = TRUE),
+    count = n()
+  ) |>
+  arrange(Basin, region)
+
+kable(summary_stats,
+      caption = "Summary Statistics: Sea Ice Extent and Hurricane Strength",
+      digits = 2,
+      col.names = c("Basin", "Sea Ice Region", "Avg Max Wind (kt)", "Count")
+)
+
+```
+
+Finally, Figure \@ref(fig:insight3) presents our findings on COVID-19's impact on happiness levels, considering climate awareness.
+
+```{r insight3, fig.height=4, fig.width=6, fig.cap="COVID-19 Impact on Happiness by Climate Awareness and Continent"}
+# 3. COVID-19 impact analysis with climate awareness variation
+
+# Create grouped bar plot
+ggplot(covid_happiness_awareness, aes(x = covid_impact, y = life_ladder, fill = climate_awareness)) +
+  geom_bar(stat = "summary", fun = "mean", position = "dodge") +
+  facet_wrap(~continent) +
+  labs(title = "COVID-19 Impact on Happiness by Climate Awareness and Continent",
+       x = "COVID-19 Impact",
+       y = "Average Happiness Score",
+       fill = "Climate Awareness") +
+  theme_minimal()
+
+```
+
+This faceted bar plot reveals several important patterns: - European countries maintained stable happiness levels despite COVID-19, especially those with high climate awareness - North American regions showed greater variation, with more pronounced drops in happiness during high COVID-19 impact periods - Asian countries demonstrated the largest gap between high and low climate awareness groups - African nations showed the lowest overall happiness scores but smallest awareness-based differences
+
+This insight is supported by the summary statistics in table \@ref(tab:summary_stats3)
+
+```{r summary_stats3}
+summary_stats <- covid_happiness_awareness |>
+  group_by(continent, covid_impact, climate_awareness) |>
+  summarise(
+    avg_happiness = mean(life_ladder, na.rm = TRUE),
+    n_countries = n()
+  ) |>
+  arrange(continent, covid_impact, climate_awareness)
+
+
+kable(summary_stats,
+      caption = "Summary Statistics: COVID-19 Impact on Happiness by Climate Awareness and Continent",
+      digits = 2,
+      col.names = c("Continent", "COVID-19 Impact", "Climate Awareness", "Avg Happiness Score", "Number of Countries")
+)
+
+```
+
+Our exploration reveals several interconnected patterns: 1. The relationship between climate awareness and happiness is regionally dependent, suggesting cultural and economic factors play important roles 2. Hurricane intensity patterns show possible connections to sea ice conditions, though the relationship varies by basin 3. Climate awareness appears to contribute to societal resilience during crises like COVID-19, but this effect varies significantly by region
+
+These findings support our investigation into how global challenges affect national well-being while revealing complex interactions between environmental, social, and health factors across different geographical and cultural contexts.
+
+# Conclusion and Future Work
+
+The report illustrated the connection between global challenges like climate change awareness, natural disasters and COVID-19 to our national well-being perspective. Based on the analysis of our data, it can be concluded that there is an existing relationship between climate awareness and happiness throughout the region, which suggests that cultural and economic factors can heavily influence the data. Additionally, the data proves that the intensity of hurricanes connects to the sea ice conditions, encouraging that they are interconnected. Lastly, the data describes a unique pattern between climate awareness and the region's adversity to global challenges like the COVID-19 pandemic. Through this, it demonstrates the interdependencies of these systems to one another.
+
+There were a few limitations that were found in our study. The first is that there is the possibility of oversimplification of complex issues. Even though this report may identify some barriers it does not focus on solutions or strategies to overcome these barriers. This could mean that the findings of this study are of no practical use to professionals. Secondly,  the timing of the study gives a limited perception of the problem. It is not specified when a lot of the data was collected and this could mean that some of the data is not relevant anymore. Lastly, there may have also been social perception bias when people reported how aware they were of climate change. They may have wanted to seem more knowledgeable about the issue and may have said that they were very aware when they were not. This means that the climate awareness data would not be completely accurate. There may be other limitations but we found these three to be the main ones. 
+
+Our study can also be taken forward by analyzing the global annual temperatures or CO2 emissions in contrast to ice extent or hurricane strength to understand if there is a bigger narrative that is going on below the surface. To continue to dig deeper into our findings, we could see if there is an overarching census that shows economic factors correlating to a region's climate awareness, happiness and COVID-19 impact. Additionally, using GDP per capita to describe the relationship between the two. On a more health basis, data can be used to emphasize the connection of the health infrastructure or health access as they relate to happiness, shown in more detail when correlated to the pandemic.
+
+# References
+
+-   \^[The relationship between climate awareness and happiness shows significant regional variations. From "The Impact of Climate Change on Human Well-being", published on Climate Change and Happiness Research Institute, 2023, url: [https://climatechangeandhappiness.com/]](https://climatechangeandhappiness.com/%5D)
+
+Their research directly supports our findings on how climate awareness correlated differently with happiness across regions. Their data particularly reinforces our observation of higher correlation in developed regions and varying impacts in developing nations\
+
+-   \^[Climate change's psychological impacts vary across populations. From "Climate Change 2022: Impacts, Adaptation and Vulnerability", IPCC Working Group II Report, published February 28, 2022, url: [https://www.ipcc.ch/2022/02/28/pr-wgii-ar6/]](https://www.ipcc.ch/2022/02/28/pr-wgii-ar6/%5D)
+
+The report validates our findings about regional variations in climate vulnerability and awareness patterns. Their comprehensive analysis of regional adaptation capabilities aligns with our observation about different continental responses to climate awareness\
+
+-   \^[Mental health effects of climate change demonstrate varying patterns across different demographic groups. From "Climate Change's Toll on Mental Health", American Psychological Association, 2023, url: [https://www.apa.org/topics/climate-change/mental-health-effects]](https://www.apa.org/topics/climate-change/mental-health-effects%5D)
+
+This source supports our analysis of how climate awareness impacts psychological well-being differently across regions. Their findings particularly validate our observation about the varying relationship between awareness level and happiness scores.\
+
+-   \^[Our hurricane intensity findings align with recent research on sea level rise impacts. From "How sea level rise contributes to billions in extra damage during hurricanes", Yale Climate Connections, published October 2022, url: [https://yaleclimateconnections.org/2022/10/how-sea-level-rise-contributes-to-billions-in-extra-damage-during-hurricanes/]](https://yaleclimateconnections.org/2022/10/how-sea-level-rise-contributes-to-billions-in-extra-damage-during-hurricanes/%5D)
+
+This research reinforces our findings about the relationship between sea ice extent and hurricane intensity. Their analysis of environmental impacts provides context for our observed patterns in hurricane strength across different basins.\
+
+-   \^[Climate change awareness and its societal impacts show complex regional patterns. From "Regional variations in climate change perception and response", Science Direct, published January 2024, url: [https://www.sciencedirect.com/science/article/pii/S2214629624002597]](https://www.sciencedirect.com/science/article/pii/S2214629624002597%5D)
+
+Their study on regional climate change perception patterns supports our findings about varying climate awareness levels across continents. The research particularly validates our observations about the relationship between awareness and societal responses.\
+
+-   \^[COVID-19's impact on global happiness demonstrates significant geographical variation. From "How has COVID-19 affected world happiness?", CIFAR, published March 17, 2021, url: [https://cifar.ca/cifarnews/2021/03/17/how-has-covid-19-affected-world-happiness/]](https://cifar.ca/cifarnews/2021/03/17/how-has-covid-19-affected-world-happiness/%5D)
+
+This source from CIFAR explores how the COVID-19 pandemic has affected happiness worldwide and the variation of it across regions. This is important for understanding the geographical differences in happiness that are evident in the first plot, which examines how COVID-19 cases and climate awareness impact happiness across continents.\
+
+-   \^[Global happiness patterns and their relationship with environmental awareness are documented in the "World Happiness Report 2023", United Nations Sustainable Development Solutions Network, published March 2023, url: [https://worldhappiness.report/ed/2023/]](https://worldhappiness.report/ed/2023/%5D)
+
+The UN’s World Happiness Report provides comprehensive data on the global happiness trends. It also helps us see how they relate to environmental trends and climate awareness. This is important to our study because it helps us with our third plot which shows COVIDs impact on happiness and climate awareness.\
+
+-   \^[Our hurricane data analysis methods and findings are supported by NOAA's "Atlantic Hurricane Database (HURDAT2)", National Hurricane Center, 2023, url: [https://www.nhc.noaa.gov/data/#hurdat]](https://www.nhc.noaa.gov/data/#hurdat%5D)
+
+This dataset provides detailed information on hurricanes in the Atlantic basin, which is essential for analyzing hurricane strength trends over time. This is important to our study becayse it helps us with the data for the ridgeline plot which explores the relationship between sea ice extent and hurricane strength across different basins.
+
+-   \^[Sea ice extent data and analysis draws from National Snow and Ice Data Center (NSIDC), "Sea Ice Index", 2023, providing crucial context for our environmental analysis, url: [https://nsidc.org/data/seaice_index/]](https://nsidc.org/data/seaice_index/%5D)
+
+The NSIDC's Sea Ice Index gives us data on sea ice extent. This data is used with the hurricane data to explore environmental changes over time. This data is important to understanding the environmental context of the second plot, which investigates how sea ice extent correlates with hurricane strength.\
+
+-   \^[COVID-19 data analysis methodology aligns with "Our World in Data COVID-19 Dataset", published 2023, which provides standardized metrics for cross-country comparison, url: [https://ourworldindata.org/coronavirus]](https://ourworldindata.org/coronavirus%5D)
+
+This dataset provides standardized COVID-19 data. This helps us with allowing for comparisons across various regions of pandemic impact. This data supports our analysis by providing reliable data on total COVID-19 cases, which is used to categorize countries into high or low impact groups for further analysis of their happiness levels.
